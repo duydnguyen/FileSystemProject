@@ -1,8 +1,7 @@
 rm(list=ls(all.names=TRUE))
 rm(list=objects(all.names=TRUE))
 #dev.off()
-install.packages("Rcmdr")
-library(Rcmdr)
+library(ggplot2)
 
 
 #### Initialize Header File ####
@@ -42,6 +41,25 @@ data.24K <- agg1[agg1$size == 24576, 1:4]
 min(data.24K$mean)
 data.24K[which(data.24K$mean < 11),1:4]
 ## smallest dspan config: sync=001 and fsync=000,001,011,101,111
+## using ggplot2: Plot mean
+df <- data.frame(sync = data.12K$sync,fsync = data.12K$fsync, dspan =data.12K$mean)
+df$sync.fsync <-interaction(df$sync, df$fsync)
+cutoff <- data.frame(x = c(-Inf, Inf), y =min(data.12K$mean), cutoff = factor(data.12K$mean))
+ggplot(aes(y = dspan, x = sync.fsync), data = df) + geom_boxplot()    
+                  #+ geom_line(aes( x, y, linetype = cutoff ), cutoff)
+ggplot(aes(y = dspan, x = fsync, fill = sync), data = df) + geom_boxplot() 
+                  #+geom_line(aes( x, y, linetype = cutoff ), cutoff)
+## boxplot 
+index.12K <-which(data.sys$size == 12288)
+data.sys.12K <- data.sys[index.12K, 1:5]
+df <- data.frame(sync = data.sys.12K$sync,fsync = data.sys.12K$fsync, 
+                 dspan =log(data.sys.12K$dspan))
+df$sync.fsync <-interaction(df$sync, df$fsync)
+#cutoff <- data.frame(x = c(-Inf, Inf), y =min(log(data.sys.12K$dspan)), cutoff = factor(data.12K$mean))
+ggplot(aes(y = dspan, x = fsync, fill = sync), data = df) + geom_boxplot() 
+          
+#index.000.011 <-which(as.numeric(data.sys.12K$sync)== 2 & as.numeric(data.sys.12K$fsync)== 1) 
+#boxplot(df$dspan[index.000.011])
 
 ##6 Interaction plots: interactions are significant 
 layout(matrix(c(1:6),nrow = 3, ncol = 2))
