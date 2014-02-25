@@ -103,3 +103,13 @@ View(coef[c(5,10,11,12,13,14,15,26,159,187)])
 View(coef[c(48,62,75,76)])
 # negative effects: size196608:chunk.order"102", size196608:chunk.order"120", size98304:chunk.order"201" 
 #size196608:chunk.order"201" 
+
+############# Orthogonal Array Designs ##################
+install.packages("DoE.base")
+library(DoE.base)
+OA <- oa.design(nfactors = 4, nlevels=c(15,6,8,4), nruns=100)
+dim(OA)
+View(OA)
+oa.design(nfactors = 3, nlevels = 2)
+
+
