@@ -6,7 +6,7 @@ library(ggplot2)
 
 #### Initialize Header File ####
 FilePath <- '~/projects/filesystem_Spring2014'
-Filename.Header <- paste('~/RScripts/HeaderFile_HW.R', sep='')
+Filename.Header <- paste('~/RScripts/HeaderFile_HW.R', sep=' ')
 source(Filename.Header)
 source(paste(FilePath, 'fn_Library.R', sep=''))
 ################################
@@ -14,7 +14,8 @@ source(paste(FilePath, 'fn_Library.R', sep=''))
 ################ Input data #################
 setwd(FilePath)
 Filename <- 'experiment-table.txt'
-data.sys <- read.table(file=Filename, header=TRUE, quote="'")
+data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
+              colClasses=c("factor","factor",NA,"factor","factor","factor","factor"))
 names(data.sys) <- c("size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
 # Should I consider size as continuous or catergorical? Do we want to include size into model?
 # Consider log-transform dspan -> look much more normal
@@ -23,6 +24,23 @@ data.sys$chunk.order <- as.factor(data.sys$chunk.order)
 data.sys$fsync <- as.factor(data.sys$fsync)
 data.sys$sync <- as.factor(data.sys$sync)
 str(data.sys)
+############### Missing Values #############
+attach(data.sys)
+test=NULL
+for (i in levels(size)) {
+  for (j in levels(chunk.order)) {
+    for (k in levels(fsync)) {
+      for (l in levels(sync)) {
+        ind1 = which(size == i)
+        ind2 = which(chunk.order[ind1]==j)
+        ind3 = which(fsync[ind2]==k)
+        ind4 = which(sync[ind3]==l)
+        test = c(test,paste(i,j,k,l,length(ind4),sep=' '))
+      }
+    }
+  }
+}
+detach(data.sys)
 ############### Exploratory data ###########
 hist(data.sys$dspan)
 hist(log(data.sys$dspan))
