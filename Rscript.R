@@ -24,6 +24,7 @@ data.sys$fsync <- as.factor(data.sys$fsync)
 data.sys$sync <- as.factor(data.sys$sync)
 str(data.sys)
 ############### Exploratory data ###########
+hist(data.sys$dspan)
 hist(log(data.sys$dspan))
 layout(matrix(c(1:4), nrow = 2, ncol = 2))
 plot(log(dspan) ~ size + chunk.order + fsync + sync,data = data.sys)
