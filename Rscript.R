@@ -92,9 +92,10 @@ summary(model.anova)
 model.anova.int <- aov(log(dspan) ~ size * chunk.order * fsync * sync, data = data.sys) 
 summary(model.anova.int)
 model.int.lm <- lm(log(dspan) ~ size * chunk.order * fsync * sync, data = data.sys) 
-store <- summary(model.int.lm)
-
-
+summary(model.int.lm)
+# Find some effects that are "significant"
+store <- model.int.lm$coef[ abs(model.int.lm$coef) >12 ]
+View(store)
 # 3-way interactions are not significant. Refit the model by only including 2-way interactions
 ## ANOVA with 2-interactions
 model.anova.int2 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
@@ -107,6 +108,12 @@ model.int2.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
                 + chunk.order:fsync + chunk.order:sync
                 + fsync:sync, data = data.sys)
 summary(model.int2.lm)
+coef <- model.anova.int2$coefficients
+str(coef)
+max(coef[2:311])
+library(faraway)
+identify(Q <- qqnorm(coef, pch=21, bg="green3", cex=1.5) )
+qqline(coef, lty=2, col="red")
 # All 2-way interactions are significant. R_squared = 0.6883
 ## Use halfnormal plot to indicate sifnificant effects. Need to do lenth's method as well
 coef <- model.anova.int2$coefficients
@@ -132,25 +139,22 @@ model.anova.int3 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
 summary(model.anova.int3)
 model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
                      + size:chunk.order + size:fsync + size:sync
-                     + chunk.order:fsync + chunk.order:sync + fsync:sync, 
+                     + chunk.order:fsync + chunk.order:sync + fsync:sync +
                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
                      + chunk.order:fsync:sync 
                      ,data = data.sys)
 summary(model.int3.lm)
-# All 2-way interactions are significant. R_squared = 0.6883
-## Use halfnormal plot to indicate sifnificant effects. Need to do lenth's method as well
-coef <- model.anova.int2$coefficients
-str(coef)
-max(coef[2:311])
+# Diagnotic Plots:
+layout(matrix(c(1,2), nrow=1, ncol=2))
+plot(model.int3.lm$fitted, model.int3.lm$res)
+qqnorm(model.int3.lm$res)
+qqline(model.int3.lm$res)
+# Significant effects using qqplot
+coef.int3 <- model.int3.lm$coefficients
 library(faraway)
-identify(Q <- qqnorm(coef, pch=21, bg="green3", cex=1.5) )
-qqline(coef, lty=2, col="red")
-# Identify 12, 13, 14, 15, 187 ; 5,10,11,26,159: 
-# positive effects: size12582912, size25165824,size50331648, size100663296
-View(coef[c(5,10,11,12,13,14,15,26,159,187)])
-View(coef[c(48,62,75,76)])
-# negative effects: size196608:chunk.order"102", size196608:chunk.order"120", size98304:chunk.order"201" 
-#size196608:chunk.order"201" 
+qqline(coef.int3, lty=2, col="red")
+identify(Q <- qqnorm(coef.int3, pch=21, bg="green3", cex=1.5) )
+# Significant effects using Lenth's method
 
 ############# Orthogonal Array Designs ##################
 install.packages("DoE.base")
