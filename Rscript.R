@@ -129,7 +129,7 @@ View(coef[c(48,62,75,76)])
 # negative effects: size196608:chunk.order"102", size196608:chunk.order"120", size98304:chunk.order"201" 
 #size196608:chunk.order"201" 
 
-## ANOVA with 2 & 3 interactions; size as blocks
+########### ANOVA with 2 & 3 interactions; size as blocks ######
 model.anova.int3 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
                         + size:chunk.order + size:fsync + size:sync
                         + chunk.order:fsync + chunk.order:sync + fsync:sync, 
@@ -144,17 +144,29 @@ model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
                      + chunk.order:fsync:sync 
                      ,data = data.sys)
 summary(model.int3.lm)
-# Diagnotic Plots:
+## Diagnotic Plots:
 layout(matrix(c(1,2), nrow=1, ncol=2))
 plot(model.int3.lm$fitted, model.int3.lm$res)
 qqnorm(model.int3.lm$res)
 qqline(model.int3.lm$res)
-# Significant effects using qqplot
-coef.int3 <- model.int3.lm$coefficients
+## Significant effects using qqplot
+coef.int3 <- model.int3.lm$coefficients[2:length(model.int3.lm$coefficients)]
 library(faraway)
 qqline(coef.int3, lty=2, col="red")
 identify(Q <- qqnorm(coef.int3, pch=21, bg="green3", cex=1.5) )
-# Significant effects using Lenth's method
+#### Significant effects using Lenth's method
+# Compute the median of |effect_i|
+med <- median(abs(coef.int3))
+# Compute s0
+s0 <- 1.5*med
+# trimming constant = 2.5 * s0
+# compute pseudo standard error PSE
+PSE <- 1.5 * median(abs(coef.int3[which(abs(coef.int3) < 2.5*s0)]))
+# Compute t.PSE
+t.PSE <- coef.int3 / PSE
+# IER =???for I=1409 at level 0.01 (Appendix H in Wu&Hamada) : No available value
+## Using BsMD package
+
 
 ############# Orthogonal Array Designs ##################
 install.packages("DoE.base")
