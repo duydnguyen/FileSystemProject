@@ -1,28 +1,24 @@
 rm(list=ls(all.names=TRUE))
 rm(list=objects(all.names=TRUE))
-#dev.off()
 library(ggplot2)
 
 
 #### Initialize Header File ####
-FilePath <- '~/projects/filesystem_Spring2014'
-Filename.Header <- paste('~/RScripts/HeaderFile_HW.R', sep=' ')
-source(Filename.Header)
-source(paste(FilePath, 'fn_Library.R', sep=''))
+FilePath <- '~/projects/filesystem_Spring2014/Data/'
 ################################
 
 ################ Input data #################
 setwd(FilePath)
-Filename <- 'experiment-table.txt'
+Filename <- '3chunks.txt'
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
               colClasses=c("factor","factor",NA,"factor","factor","factor","factor"))
 names(data.sys) <- c("size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
 # Should I consider size as continuous or catergorical? Do we want to include size into model?
 # Consider log-transform dspan -> look much more normal
-data.sys$size <- as.factor(data.sys$size)
-data.sys$chunk.order <- as.factor(data.sys$chunk.order)
-data.sys$fsync <- as.factor(data.sys$fsync)
-data.sys$sync <- as.factor(data.sys$sync)
+#data.sys$size <- as.factor(data.sys$size)
+#data.sys$chunk.order <- as.factor(data.sys$chunk.order)
+#data.sys$fsync <- as.factor(data.sys$fsync)
+#data.sys$sync <- as.factor(data.sys$sync)
 str(data.sys)
 ############### Missing Values #############
 attach(data.sys)
