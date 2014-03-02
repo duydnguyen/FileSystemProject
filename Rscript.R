@@ -11,7 +11,7 @@ FilePath <- '~/projects/filesystem_Spring2014/Data/'
 setwd(FilePath)
 Filename <- '3chunks.txt'
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
-                       colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
+                       colClasses=c("character","factor",NA,"factor","factor","factor","character"))
 names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
 
 # Should I consider size as continuous or catergorical? Do we want to include size into model?
@@ -92,7 +92,9 @@ summary(model.anova)
 model.anova.int <- aov(log(dspan) ~ size * chunk.order * fsync * sync, data = data.sys) 
 summary(model.anova.int)
 model.int.lm <- lm(log(dspan) ~ size * chunk.order * fsync * sync, data = data.sys) 
-summary(model.int.lm)
+store <- summary(model.int.lm)
+
+
 # 3-way interactions are not significant. Refit the model by only including 2-way interactions
 ## ANOVA with 2-interactions
 model.anova.int2 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
@@ -120,14 +122,14 @@ View(coef[c(48,62,75,76)])
 # negative effects: size196608:chunk.order"102", size196608:chunk.order"120", size98304:chunk.order"201" 
 #size196608:chunk.order"201" 
 
-## ANOVA with 2 & 3 interactions; size as a continuous covariate
+## ANOVA with 2 & 3 interactions; size as blocks
 model.anova.int3 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
                         + size:chunk.order + size:fsync + size:sync
                         + chunk.order:fsync + chunk.order:sync + fsync:sync, 
                         + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
                         + chunk.order:fsync:sync 
                         ,data = data.sys) 
-summary(model.anova.int2)
+summary(model.anova.int3)
 model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
                      + size:chunk.order + size:fsync + size:sync
                      + chunk.order:fsync + chunk.order:sync + fsync:sync, 
