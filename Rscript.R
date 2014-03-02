@@ -11,9 +11,9 @@ FilePath <- '~/projects/filesystem_Spring2014/Data/'
 setwd(FilePath)
 Filename <- '3chunks.txt'
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
-              colClasses=c("factor","factor",NA,"factor","factor","factor","factor"))
-names(data.sys) <- c("size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
-data.sys$size <- as.numeric(data.sys$size)
+                       colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
+names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
+
 # Should I consider size as continuous or catergorical? Do we want to include size into model?
 # Consider log-transform dspan -> look much more normal
 #data.sys$size <- as.factor(data.sys$size)
@@ -124,17 +124,17 @@ View(coef[c(48,62,75,76)])
 model.anova.int3 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
                         + size:chunk.order + size:fsync + size:sync
                         + chunk.order:fsync + chunk.order:sync + fsync:sync, 
-                        
-                        
-                        
-                        
-                        data = data.sys) 
+                        + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+                        + chunk.order:fsync:sync 
+                        ,data = data.sys) 
 summary(model.anova.int2)
-model.int2.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
-                    + size:chunk.order + size:fsync + size:sync
-                    + chunk.order:fsync + chunk.order:sync
-                    + fsync:sync, data = data.sys)
-summary(model.int2.lm)
+model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
+                     + size:chunk.order + size:fsync + size:sync
+                     + chunk.order:fsync + chunk.order:sync + fsync:sync, 
+                     + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+                     + chunk.order:fsync:sync 
+                     ,data = data.sys)
+summary(model.int3.lm)
 # All 2-way interactions are significant. R_squared = 0.6883
 ## Use halfnormal plot to indicate sifnificant effects. Need to do lenth's method as well
 coef <- model.anova.int2$coefficients
