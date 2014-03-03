@@ -93,8 +93,8 @@ model.anova.int <- aov(log(dspan) ~ size * chunk.order * fsync * sync, data = da
 summary(model.anova.int)
 model.int.lm <- lm(log(dspan) ~ size * chunk.order * fsync * sync, data = data.sys) 
 summary(model.int.lm)
-# Find some effects that are "significant"
-store <- model.int.lm$coef[ abs(model.int.lm$coef) >12 ]
+# Find some effects that are "significant" from FULL model
+store <- model.int.lm$coef[ abs(model.int.lm$coef) >9.905 ]
 View(store)
 # 3-way interactions are not significant. Refit the model by only including 2-way interactions
 ## ANOVA with 2-interactions
@@ -132,7 +132,7 @@ View(coef[c(48,62,75,76)])
 ########### ANOVA with 2 & 3 interactions; size as blocks ######
 model.anova.int3 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
                         + size:chunk.order + size:fsync + size:sync
-                        + chunk.order:fsync + chunk.order:sync + fsync:sync, 
+                        + chunk.order:fsync + chunk.order:sync + fsync:sync
                         + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
                         + chunk.order:fsync:sync 
                         ,data = data.sys) 
@@ -143,7 +143,11 @@ model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
                      + chunk.order:fsync:sync 
                      ,data = data.sys)
-summary(model.int3.lm)
+summary(model.int3.lm) 
+out <- capture.output(summary(model.int3.lm))
+cat(out,file="out_3chunks.txt",sep="\n",append=TRUE)
+# All main effects, 2-, 3- interactions are significant. Moving from full -> reduced 
+#(2880 para -> 1410 para) R^2 only reduces to 0.9487
 ## Diagnotic Plots:
 layout(matrix(c(1,2), nrow=1, ncol=2))
 plot(model.int3.lm$fitted, model.int3.lm$res)
@@ -154,6 +158,10 @@ coef.int3 <- model.int3.lm$coefficients[2:length(model.int3.lm$coefficients)]
 library(faraway)
 qqline(coef.int3, lty=2, col="red")
 identify(Q <- qqnorm(coef.int3, pch=21, bg="green3", cex=1.5) )
+# Pick the first 114 most significant effects
+store.int3 <- model.int3.lm$coef[ abs(model.int3.lm$coef) >5 ]
+View(store.int3)
+View(store)
 #### Significant effects using Lenth's method
 # Compute the median of |effect_i|
 med <- median(abs(coef.int3))
@@ -166,8 +174,13 @@ PSE <- 1.5 * median(abs(coef.int3[which(abs(coef.int3) < 2.5*s0)]))
 t.PSE <- coef.int3 / PSE
 # IER =???for I=1409 at level 0.01 (Appendix H in Wu&Hamada) : No available value
 ## Using BsMD package
+library(BsMD)
+Lenth <- LenthPlot(coef.int3, alpha = 0.01, plt = TRUE, limits = TRUE, 
+          xlab = "factors", ylab = "effects")
 
-
+effect.sig <- coef.int3[which(abs(t.PSE) > Lenth[4])]
+length(effect.sig) #885
+View(effect.sig)
 ############# Orthogonal Array Designs ##################
 install.packages("DoE.base")
 library(DoE.base)
