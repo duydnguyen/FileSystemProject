@@ -28,7 +28,9 @@ model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
 summary(model.int3.lm) 
 # Pick the first 114 most significant effects
 store.int3 <- model.int3.lm$coef[ abs(model.int3.lm$coef) >5 ]
-#View(store.int3)
+## Write summary() to a file
+out <- capture.output(summary(model.int3.lm))
+cat(out,file="out_4chunks.txt",sep="\n",append=TRUE)
 
 
 
