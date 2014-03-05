@@ -19,7 +19,7 @@ store <- model.int.lm$coef[ abs(model.int.lm$coef) >9.905 ]
 #View(store)
 
 ########### ANOVA with 2 & 3 interactions; size as blocks ######
-model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
+model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                     + size:chunk.order + size:fsync + size:sync
                     + chunk.order:fsync + chunk.order:sync + fsync:sync +
                       + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync

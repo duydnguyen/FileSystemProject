@@ -130,14 +130,14 @@ View(coef[c(48,62,75,76)])
 #size196608:chunk.order"201" 
 
 ########### ANOVA with 2 & 3 interactions; size as blocks ######
-model.anova.int3 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
+model.anova.int3 <- aov(log2(dspan) ~ size + chunk.order + fsync + sync
                         + size:chunk.order + size:fsync + size:sync
                         + chunk.order:fsync + chunk.order:sync + fsync:sync
                         + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
                         + chunk.order:fsync:sync 
                         ,data = data.sys) 
 summary(model.anova.int3)
-model.int3.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
+model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                      + size:chunk.order + size:fsync + size:sync
                      + chunk.order:fsync + chunk.order:sync + fsync:sync +
                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
