@@ -143,6 +143,16 @@ model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
                      + chunk.order:fsync:sync 
                      ,data = data.sys)
+## Effect coding
+model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
+                    + size:chunk.order + size:fsync + size:sync
+                    + chunk.order:fsync + chunk.order:sync + fsync:sync +
+                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+                    + chunk.order:fsync:sync,
+      contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
+                  sync = contr.sum),
+                    data = data.sys)
+
 summary(model.int3.lm) 
 out <- capture.output(summary(model.int3.lm))
 cat(out,file="out_3chunks.txt",sep="\n",append=TRUE)

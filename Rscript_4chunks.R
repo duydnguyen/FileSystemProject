@@ -26,6 +26,15 @@ model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                     + chunk.order:fsync:sync 
                     ,data = data.sys)
 summary(model.int3.lm) 
+########### ANOVA with 2 & 3 interactions; size as blocks; effect coding ######
+model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
+                    + size:chunk.order + size:fsync + size:sync
+                    + chunk.order:fsync + chunk.order:sync + fsync:sync +
+                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+                    + chunk.order:fsync:sync,
+                    contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
+                                     sync = contr.sum),
+                    data = data.sys)
 # Pick the first 114 most significant effects
 store.int3 <- model.int3.lm$coef[ abs(model.int3.lm$coef) >5 ]
 ## Write summary() to a file
