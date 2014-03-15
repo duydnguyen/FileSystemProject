@@ -11,22 +11,12 @@ FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
 ################ Input data #################
 setwd(FilePath)
 Filename <- '3chunks.txt'
+
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
-                       colClasses=c("character","factor",NA,"factor","factor","factor","character"))
+                         colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
 names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
 
-data.sys.n <- read.table(file=Filename, header=TRUE,sep=' ',
-                         colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
-names(data.sys.n) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
-
 ########### ANOVA with 2 & 3 interactions; size as blocks ######
-model.anova.int3 <- aov(log2(dspan) ~ size + chunk.order + fsync + sync
-                        + size:chunk.order + size:fsync + size:sync
-                        + chunk.order:fsync + chunk.order:sync + fsync:sync
-                        + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
-                        + chunk.order:fsync:sync 
-                        ,data = data.sys) 
-summary(model.anova.int3)
 model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                      + size:chunk.order + size:fsync + size:sync
                      + chunk.order:fsync + chunk.order:sync + fsync:sync +
