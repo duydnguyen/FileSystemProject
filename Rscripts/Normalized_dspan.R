@@ -47,9 +47,16 @@ for (i in 3:length(data.12f)){
 }
 
 ## Fit model with 2 & 3-interactions: Resid plot shows inadequate model, hist(resid) looks normal
-model.12f <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^2. + .^3.
+model.12f <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^2. + .^3.,
+                contrasts = list(c.order = contr.sum, fsync1 = contr.sum, fsync2 = contr.sum, fsync3 = contr.sum,
+                                 sync1 = contr.sum, sync2 = contr.sum)
                 ,data = data.12f)
 anova(model.12f)
+# Backward Stepwise BIC
+null <- lm(ndspan ~ 1 ,data = data.12f)
+smodel.12f <- step(null, scope= list(lower=null, upper=model.12f), direction="both", k=log(dim(data.12)[1]))
+summary(smodel.12f)
+anova(smodel.12f)
 
 
 # All main effects, 2-, 3- interactions are significant. Moving from full -> reduced 
