@@ -34,7 +34,7 @@ MSelect <- function(KB){
     data.sizef <- data.frame(data.size$dspan, data.size$chunk.order, factor.fsync, factor.sync[,-3])
     names(data.sizef)[1] <- c("ndspan")
     names(data.sizef)[2] <- c("c.order")
-    data.sizef[,3:dim(data.sizef)[2]] <- lapply(data.sizef[,3:dim(data.12f)[2]], factor)
+    data.sizef[,3:dim(data.sizef)[2]] <- lapply(data.sizef[,3:dim(data.sizef)[2]], factor)
     # Code Effects
     lm.str <- "ndspan ~ "
     fac.names <- names(data.sizef)[2:length(data.sizef)]
@@ -50,9 +50,13 @@ MSelect <- function(KB){
     # Backward Stepwise BIC
     null <- lm(ndspan ~ 1 ,data = data.sizef)
     smodel.sizef <- step(null, scope= list(lower=null, upper=model.sizef), direction="both", k=log(dim(data.size)[1]))
-    summary(smodel.sizef)
+    
     coef <- smodel.sizef$coefficients
+    ##get anova()
+    #return(smodel.sizef)
     return(coef)
+    #return(smodel.sizef[1:length(smodel.sizef)])
+    
 }
 
 #MSelect(12)

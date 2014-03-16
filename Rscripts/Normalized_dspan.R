@@ -7,15 +7,6 @@ setwd(FilePath)
 
 source("fncs.R")
 ########### Model fitting ######
-# model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
-#                     + size:chunk.order + size:fsync + size:sync
-#                     + chunk.order:fsync + chunk.order:sync + fsync:sync +
-#                       + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
-#                     + chunk.order:fsync:sync,
-#       contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
-#                   sync = contr.sum),
-#                     data = data.sys)
-
 #### size = 12K with 2-interactions
 data.12 <- subset(data.sys, size == "12")
 model.12 <- lm(dspan ~ fsync + sync + chunk.order  
@@ -48,16 +39,17 @@ model.12f <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^
                 contrasts = list(c.order = contr.sum, fsync1 = contr.sum, fsync2 = contr.sum, fsync3 = contr.sum,
                                  sync1 = contr.sum, sync2 = contr.sum)
                 ,data = data.12f)
+coef <- model.12f$coefficients
 anova(model.12f)
 # Backward Stepwise BIC
 null <- lm(ndspan ~ 1 ,data = data.12f)
 smodel.12f <- step(null, scope= list(lower=null, upper=model.12f), direction="both", k=log(dim(data.12)[1]))
+smodel.12f$coefficients
 summary(smodel.12f)
 anova(smodel.12f)
 
 ##### Function: input of size, output model based on AIC stepwise
-MSelect(12)
-
+MSelect(180)
 
 
 
