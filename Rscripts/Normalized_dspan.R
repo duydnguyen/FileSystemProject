@@ -1,54 +1,57 @@
 ## This file has been moved to Google Drive
 rm(list=ls(all.names=TRUE))
 rm(list=objects(all.names=TRUE))
-
-
-
 #### Initialize Header File ####
 FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
-################################
-
-################ Input data #################
 setwd(FilePath)
-Filename <- '3chunks.txt'
-data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
-                         colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
-names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
-## normalize dspan
-data.sys$dspan <- data.sys$dspan/data.sys$size
-data.sys$size <- as.factor(data.sys$size)
-########### ANOVA with 2 & 3 interactions; size as blocks ######
+
+source("fncs.R")
+########### Model fitting ######
 # model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
-#                      + size:chunk.order + size:fsync + size:sync
-#                      + chunk.order:fsync + chunk.order:sync + fsync:sync +
-#                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
-#                      + chunk.order:fsync:sync 
-#                      ,data = data.sys)
+#                     + size:chunk.order + size:fsync + size:sync
+#                     + chunk.order:fsync + chunk.order:sync + fsync:sync +
+#                       + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+#                     + chunk.order:fsync:sync,
+#       contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
+#                   sync = contr.sum),
+#                     data = data.sys)
 
-## Effect coding
-model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
-                    + size:chunk.order + size:fsync + size:sync
-                    + chunk.order:fsync + chunk.order:sync + fsync:sync +
-                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
-                    + chunk.order:fsync:sync,
-      contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
-                  sync = contr.sum),
-                    data = data.sys)
+#### size = 12K with 2-interactions
+data.12 <- subset(data.sys, size == "12")
+model.12 <- lm(dspan ~ fsync + sync + chunk.order  
+               +fsync:sync + fsync:chunk.order + sync:chunk.order
+               ,contrasts = list(chunk.order = contr.sum, fsync = contr.sum, sync = contr.sum),
+               data = data.12)
+#summary(model.12)
+#qqline(model.12$coefficients)
+#aggregate(data.12$dspan, list(chunk =data.12$chunk.order), mean)
+# Comments: This model has a clear pattern in residual plot --> Model inadequacy -> fix: Box-Cox transform, glm?
+
+### Decompose factors: Drop sync3 (1 level). Cannot decompose chunk.order (Discuss!)
+# Set up 
+factor.fsync <- EvalFac(f = data.12$fsync, "fsync")
+factor.sync <- EvalFac(f = data.12$sync, "sync")
+##factor.c.order <- EvalFac(f = data.12$chunk.order, "c.order")
+data.12f <- data.frame(data.12$dspan, data.12$chunk.order, factor.fsync, factor.sync[,-3])
+names(data.12f)[1] <- c("ndspan")
+names(data.12f)[2] <- c("c.order")
+data.12f[,3:dim(data.12f)[2]] <- lapply(data.12f[,3:dim(data.12f)[2]], factor)
+
+## code effects
+# main effect
+lm.str <- "ndspan ~ "
+fac.names <- names(data.12f)[2:length(data.12f)]
+lm.str <- paste(lm.str,fac.names[1],sep='')
+for (i in 3:length(data.12f)){
+    lm.str <- paste(lm.str, fac.names[i-1],sep=" + ")   
+}
+
+## Fit model with 2 & 3-interactions: Resid plot shows inadequate model, hist(resid) looks normal
+model.12f <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^2. + .^3.
+                ,data = data.12f)
+anova(model.12f)
 
 
-model.int3.nolog<- lm(dspan ~ size + chunk.order + fsync + sync
-                    + size:chunk.order + size:fsync + size:sync
-                    + chunk.order:fsync + chunk.order:sync + fsync:sync +
-                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
-                    + chunk.order:fsync:sync,
-                    contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
-                                     sync = contr.sum),
-                    data = data.sys)
-
-summary(model.int3.nolog)
-layout(matrix(c(1,2),nrow=2, ncol=1))
-plot(model.int3.lm$fitted, model.int3.lm$resid)
-plot(model.int3.nolog$fitted, model.int3.nolog$resid)
 # All main effects, 2-, 3- interactions are significant. Moving from full -> reduced 
 #(2880 para -> 1410 para) R^2 only reduces to 0.9487
 ## Diagnotic Plots:
