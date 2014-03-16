@@ -11,18 +11,20 @@ FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
 ################ Input data #################
 setwd(FilePath)
 Filename <- '3chunks.txt'
-
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
                          colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
 names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
-
+## normalize dspan
+data.sys$dspan <- data.sys$dspan/data.sys$size
+data.sys$size <- as.factor(data.sys$size)
 ########### ANOVA with 2 & 3 interactions; size as blocks ######
-model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
-                     + size:chunk.order + size:fsync + size:sync
-                     + chunk.order:fsync + chunk.order:sync + fsync:sync +
-                     + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
-                     + chunk.order:fsync:sync 
-                     ,data = data.sys)
+# model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
+#                      + size:chunk.order + size:fsync + size:sync
+#                      + chunk.order:fsync + chunk.order:sync + fsync:sync +
+#                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+#                      + chunk.order:fsync:sync 
+#                      ,data = data.sys)
+
 ## Effect coding
 model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                     + size:chunk.order + size:fsync + size:sync
@@ -33,21 +35,20 @@ model.int3.lm <- lm(log2(dspan) ~ size + chunk.order + fsync + sync
                   sync = contr.sum),
                     data = data.sys)
 
-## Normalized dspan
-model.int3.lm <- lm(log2(dspan/size) ~ as.factor(size) + chunk.order + fsync + sync
-                    + as.factor(size):chunk.order + as.factor(size):fsync + as.factor(size):sync
+
+model.int3.nolog<- lm(dspan ~ size + chunk.order + fsync + sync
+                    + size:chunk.order + size:fsync + size:sync
                     + chunk.order:fsync + chunk.order:sync + fsync:sync +
-                      + as.factor(size):chunk.order:fsync + as.factor(size):chunk.order:sync + size:fsync:sync
-                    + chunk.order:fsync:sync ,data = data.sys.n)
+                      + size:chunk.order:fsync + size:chunk.order:sync + size:fsync:sync
+                    + chunk.order:fsync:sync,
+                    contrasts = list(size = contr.sum, chunk.order = contr.sum, fsync = contr.sum,
+                                     sync = contr.sum),
+                    data = data.sys)
 
-summary(model.int3.lm) 
-coef3 <- model.int3.lm$coef
-
- 
-
-
-out <- capture.output(summary(model.int3.lm))
-cat(out,file="out_3chunks.txt",sep="\n",append=TRUE)
+summary(model.int3.nolog)
+layout(matrix(c(1,2),nrow=2, ncol=1))
+plot(model.int3.lm$fitted, model.int3.lm$resid)
+plot(model.int3.nolog$fitted, model.int3.nolog$resid)
 # All main effects, 2-, 3- interactions are significant. Moving from full -> reduced 
 #(2880 para -> 1410 para) R^2 only reduces to 0.9487
 ## Diagnotic Plots:
