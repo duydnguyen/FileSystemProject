@@ -51,9 +51,11 @@ MSelect <- function(KB){
     null <- lm(ndspan ~ 1 ,data = data.sizef)
     smodel.sizef <- step(null, scope= list(lower=null, upper=model.sizef), direction="both", k=log(dim(data.size)[1]))
     summary(smodel.sizef)
-    return(smodel.sizef$coefficients)
+    coef <- smodel.sizef$coefficients
+    return(coef)
 }
 
 #MSelect(12)
+
 
 

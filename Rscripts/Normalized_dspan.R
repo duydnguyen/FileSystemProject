@@ -22,8 +22,6 @@ model.12 <- lm(dspan ~ fsync + sync + chunk.order
                +fsync:sync + fsync:chunk.order + sync:chunk.order
                ,contrasts = list(chunk.order = contr.sum, fsync = contr.sum, sync = contr.sum),
                data = data.12)
-#summary(model.12)
-#qqline(model.12$coefficients)
 #aggregate(data.12$dspan, list(chunk =data.12$chunk.order), mean)
 # Comments: This model has a clear pattern in residual plot --> Model inadequacy -> fix: Box-Cox transform, glm?
 
@@ -45,7 +43,6 @@ lm.str <- paste(lm.str,fac.names[1],sep='')
 for (i in 3:length(data.12f)){
     lm.str <- paste(lm.str, fac.names[i-1],sep=" + ")   
 }
-
 ## Fit model with 2 & 3-interactions: Resid plot shows inadequate model, hist(resid) looks normal
 model.12f <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^2. + .^3.,
                 contrasts = list(c.order = contr.sum, fsync1 = contr.sum, fsync2 = contr.sum, fsync3 = contr.sum,
@@ -57,6 +54,11 @@ null <- lm(ndspan ~ 1 ,data = data.12f)
 smodel.12f <- step(null, scope= list(lower=null, upper=model.12f), direction="both", k=log(dim(data.12)[1]))
 summary(smodel.12f)
 anova(smodel.12f)
+
+##### Function: input of size, output model based on AIC stepwise
+MSelect(12)
+
+
 
 
 # All main effects, 2-, 3- interactions are significant. Moving from full -> reduced 
