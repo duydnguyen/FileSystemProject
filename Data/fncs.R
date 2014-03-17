@@ -1,8 +1,8 @@
 ################ Input data #################
-Filename <- '3chunks_v1.txt'
+Filename <- '4chunks_v1.txt'
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
-                         colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
-names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
+                         colClasses=c("numeric",NA,"factor","factor","factor","character"))
+names(data.sys) <- c("size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
 ## normalize dspan
 data.sys$dspan <- data.sys$dspan/data.sys$size
 data.sys$size <- as.factor(data.sys$size/1024)
@@ -31,22 +31,21 @@ MSelect <- function(KB){
     data.size <- subset(data.sys, size == KB)
     factor.fsync <- EvalFac(f = data.size$fsync, "fsync")
     factor.sync <- EvalFac(f = data.size$sync, "sync")
-    data.sizef <- data.frame(data.size$dspan, data.size$chunk.order, factor.fsync, factor.sync[,-3])
+    data.sizef <- data.frame(data.size$dspan, data.size$chunk.order, factor.fsync, factor.sync[,-dim(factor.sync)[2]])
     names(data.sizef)[1] <- c("ndspan")
     names(data.sizef)[2] <- c("c.order")
     data.sizef[,3:dim(data.sizef)[2]] <- lapply(data.sizef[,3:dim(data.sizef)[2]], factor)
     # Code Effects
     lm.str <- "ndspan ~ "
     fac.names <- names(data.sizef)[2:length(data.sizef)]
-    lm.str <- paste(lm.str,fac.names[1],sep='')
     for (i in 3:length(data.sizef)){
-      lm.str <- paste(lm.str, fac.names[i-1],sep=" + ")   
+      lm.str <- paste(lm.str, fac.names[i-1],sep=" ")   
+      lm.str <- paste(lm.str, " +", sep="")
     }
+    lm.str <- paste(lm.str,fac.names[1], "+ .^2. + .^3.",sep=' ')
     # Fit model with 2 & 3-interactions
-    model.sizef <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^2. + .^3.,
-                    contrasts = list(c.order = contr.sum, fsync1 = contr.sum, fsync2 = contr.sum, fsync3 = contr.sum,
-                                     sync1 = contr.sum, sync2 = contr.sum)
-                    ,data = data.sizef)
+    model.sizef <- lm(lm.str, contrasts = list(c.order = contr.sum, fsync1 = contr.sum, fsync2 = contr.sum, 
+                                      fsync3 = contr.sum, sync1 = contr.sum, sync2 = contr.sum),data = data.sizef)
     # Backward Stepwise BIC
     null <- lm(ndspan ~ 1 ,data = data.sizef)
     smodel.sizef <- step(null, scope= list(lower=null, upper=model.sizef), direction="both", k=log(dim(data.size)[1]))

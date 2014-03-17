@@ -21,7 +21,7 @@ model.12 <- lm(dspan ~ fsync + sync + chunk.order
 factor.fsync <- EvalFac(f = data.12$fsync, "fsync")
 factor.sync <- EvalFac(f = data.12$sync, "sync")
 ##factor.c.order <- EvalFac(f = data.12$chunk.order, "c.order")
-data.12f <- data.frame(data.12$dspan, data.12$chunk.order, factor.fsync, factor.sync[,-3])
+data.12f <- data.frame(data.12$dspan, data.12$chunk.order, factor.fsync, factor.sync[,-dim(factor.sync)[2]])
 names(data.12f)[1] <- c("ndspan")
 names(data.12f)[2] <- c("c.order")
 data.12f[,3:dim(data.12f)[2]] <- lapply(data.12f[,3:dim(data.12f)[2]], factor)
@@ -30,12 +30,13 @@ data.12f[,3:dim(data.12f)[2]] <- lapply(data.12f[,3:dim(data.12f)[2]], factor)
 # main effect
 lm.str <- "ndspan ~ "
 fac.names <- names(data.12f)[2:length(data.12f)]
-lm.str <- paste(lm.str,fac.names[1],sep='')
 for (i in 3:length(data.12f)){
-    lm.str <- paste(lm.str, fac.names[i-1],sep=" + ")   
+    lm.str <- paste(lm.str, fac.names[i-1],sep=" ")   
+    lm.str <- paste(lm.str, " +", sep="")
 }
+lm.str <- paste(lm.str,fac.names[1], "+ .^2. + .^3.",sep=' ')
 ## Fit model with 2 & 3-interactions: Resid plot shows inadequate model, hist(resid) looks normal
-model.12f <- lm(ndspan ~ fsync1 + fsync2 + fsync3 + sync1 + sync2 + c.order + .^2. + .^3.,
+model.12f <- lm(lm.str,
                 contrasts = list(c.order = contr.sum, fsync1 = contr.sum, fsync2 = contr.sum, fsync3 = contr.sum,
                                  sync1 = contr.sum, sync2 = contr.sum)
                 ,data = data.12f)
