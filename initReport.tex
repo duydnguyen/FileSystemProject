@@ -1,0 +1,433 @@
+\documentclass[11pt]{article}
+\usepackage[hmargin={0.8in, 0.8in}, vmargin={1in, 1in}]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage{amsmath}                                                                                                                                                                                
+\usepackage{amsthm}                                                                                                                                                                                 
+
+
+\usepackage{Sweave}
+\begin{document}
+\input{initReport-concordance}
+
+\noindent
+\begin{flushleft}
+\textbf{FileSystem - Initial Analysis}\\
+\textbf{02-27-2014}
+\end{flushleft}
+
+\section{Initial Analysis}
+
+\begin{Schunk}
+\begin{Soutput}
+'data.frame':	2828 obs. of  6 variables:
+ $ size        : Factor w/ 15 levels "12288","24576",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ dspan       : num  12288 12288 12288 2101248 2101248 ...
+ $ chunk.order : Factor w/ 6 levels "\"012\"","\"021\"",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ fsync       : Factor w/ 8 levels "\"000\"","\"001\"",..: 1 2 1 2 3 4 3 4 1 2 ...
+ $ sync        : Factor w/ 4 levels "\"001\"","\"011\"",..: 1 1 2 2 1 1 2 2 3 3 ...
+ $ chunk.number: int  3 3 3 3 3 3 3 3 3 3 ...
+\end{Soutput}
+\end{Schunk}
+\begin{figure}[!ht]
+\begin{minipage}[b]{0.4\textwidth}
+\centering
+\includegraphics[height=7cm,width=8cm]{dspan.png}
+\caption{Histogram of dspan}\label{fig:*1}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.4\textwidth}
+\centering
+\includegraphics[height=7cm,width=8cm]{logscale.png}
+\caption{Histogram of log(dspan)}\label{fig:*2}
+\end{minipage}
+\hfill
+\end{figure}
+\noindent
+
+The log(dspan) looks better since it is very close to normal curve. I would choose log(dspan) as a response for my model. Please verify this if this is what you want.
+
+\begin{center}
+\includegraphics[height=20cm,width=18cm]{interactions.png}
+\end{center}
+
+We can see that the interactions among factors are very significant in our model. \\
+\newpage
+Initially, I will run the following model 
+\begin{verbatim}
+model.int.lm <- lm(log(dspan) ~ size * chunk.order * fsync * sync, data = data.sys) 
+\end{verbatim}
+
+This means that I regress our response log(dspan) on $4$ factors size, chunk.order, fsync, syncs and all of their interactions. Hence, there are total $15*6*8*4=2880$ parameters. This is exactly our number of runs. Thus, this model would give us a perfect  coefficient of determination $R^2=1.$ \\
+For the purpose of simple analysis and I only assume that we only concern about main effects and their two-way interactions. I will perform the following model:
+
+\begin{verbatim}
+model.anova.int2 <- aov(log(dspan) ~ size + chunk.order + fsync + sync
+                        + size:chunk.order + size:fsync + size:sync
+                        + chunk.order:fsync + chunk.order:sync
+                        + fsync:sync, data = data.sys) 
+\end{verbatim}
+\textbf{Remark:} From last meeting, Jun was also interested in three-way interactions. I will incorporate three-way interactions later in our model. But for the sake of argument, I will use the. current model.\\
+
+As we noticed the difference from our previous model, the number of our parameters is $331,$ almost $12\%$ reduction in our number of our parameters. However, the $R^2=0.6883.$ From this, we can see that main effects and two-way interactions significantly affect dspan. The following is summary of our model with two-way interactions. 
+
+\begin{Schunk}
+\begin{Sinput}
+> model.int2.lm <- lm(log(dspan) ~ size + chunk.order + fsync + sync
++                 + size:chunk.order + size:fsync + size:sync
++                 + chunk.order:fsync + chunk.order:sync
++                 + fsync:sync, data = data.sys)
+> summary(model.int2.lm)
+\end{Sinput}
+\begin{Soutput}
+Call:
+lm(formula = log(dspan) ~ size + chunk.order + fsync + sync + 
+    size:chunk.order + size:fsync + size:sync + chunk.order:fsync + 
+    chunk.order:sync + fsync:sync, data = data.sys)
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8.7759 -0.8452  0.0477  0.6271  9.5536 
+
+Coefficients:
+                                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                     9.248303   0.610475  15.149  < 2e-16 ***
+size24576                       0.284226   0.755101   0.376 0.706646    
+size49152                       0.958623   0.755895   1.268 0.204845    
+size98304                       3.289824   0.752936   4.369 1.30e-05 ***
+size196608                      4.772578   0.755747   6.315 3.18e-10 ***
+size393216                      2.600785   0.753000   3.454 0.000562 ***
+size786432                      3.472066   0.752686   4.613 4.17e-06 ***
+size1572864                     4.194351   0.761423   5.509 3.98e-08 ***
+size3145728                     4.484336   0.760430   5.897 4.20e-09 ***
+size6291456                     5.238710   0.751632   6.970 4.04e-12 ***
+size12582912                    5.880651   0.752189   7.818 7.82e-15 ***
+size25165824                    6.950532   0.754106   9.217  < 2e-16 ***
+size50331648                    7.636802   0.751632  10.160  < 2e-16 ***
+size100663296                   8.329949   0.751632  11.082  < 2e-16 ***
+size201326592                   9.023096   0.751632  12.005  < 2e-16 ***
+chunk.order"021"                0.691513   0.586195   1.180 0.238245    
+chunk.order"102"                1.056969   0.591148   1.788 0.073897 .  
+chunk.order"120"                1.027737   0.586307   1.753 0.079741 .  
+chunk.order"201"                0.974067   0.607937   1.602 0.109226    
+chunk.order"210"                0.667132   0.591619   1.128 0.259580    
+fsync"001"                      1.330283   0.671252   1.982 0.047611 *  
+fsync"010"                      2.686742   0.660045   4.071 4.83e-05 ***
+fsync"011"                      1.019317   0.663789   1.536 0.124761    
+fsync"100"                      4.524973   0.660315   6.853 9.08e-12 ***
+fsync"101"                      1.645806   0.663138   2.482 0.013135 *  
+fsync"110"                      4.507534   0.665370   6.774 1.55e-11 ***
+fsync"111"                      2.348827   0.662748   3.544 0.000401 ***
+sync"011"                       1.920739   0.507821   3.782 0.000159 ***
+sync"101"                       2.064492   0.503345   4.102 4.23e-05 ***
+sync"111"                       3.413093   0.504110   6.771 1.59e-11 ***
+size24576:chunk.order"021"     -0.204089   0.641363  -0.318 0.750351    
+size49152:chunk.order"021"     -0.326882   0.644167  -0.507 0.611884    
+size98304:chunk.order"021"      0.756532   0.641363   1.180 0.238283    
+size196608:chunk.order"021"     1.225047   0.644167   1.902 0.057318 .  
+size393216:chunk.order"021"     0.339721   0.641363   0.530 0.596377    
+size786432:chunk.order"021"     0.278166   0.644167   0.432 0.665907    
+size1572864:chunk.order"021"    0.324087   0.655889   0.494 0.621266    
+size3145728:chunk.order"021"    1.230592   0.649757   1.894 0.058349 .  
+size6291456:chunk.order"021"    1.130832   0.641363   1.763 0.077993 .  
+size12582912:chunk.order"021"   1.095114   0.647070   1.692 0.090690 .  
+size25165824:chunk.order"021"   0.876651   0.641363   1.367 0.171793    
+size50331648:chunk.order"021"  -0.429445   0.641363  -0.670 0.503186    
+size100663296:chunk.order"021" -0.429445   0.641363  -0.670 0.503186    
+size201326592:chunk.order"021" -0.429445   0.641363  -0.670 0.503186    
+size24576:chunk.order"102"     -0.064635   0.646981  -0.100 0.920430    
+size49152:chunk.order"102"     -0.257826   0.646951  -0.399 0.690277    
+size98304:chunk.order"102"     -0.429630   0.649895  -0.661 0.508624    
+size196608:chunk.order"102"    -4.818292   0.649826  -7.415 1.66e-13 ***
+size393216:chunk.order"102"    -0.530604   0.644171  -0.824 0.410188    
+size786432:chunk.order"102"    -0.553310   0.646968  -0.855 0.392502    
+size1572864:chunk.order"102"   -0.577647   0.656088  -0.880 0.378704    
+size3145728:chunk.order"102"   -0.459709   0.652686  -0.704 0.481291    
+size6291456:chunk.order"102"   -0.458683   0.644171  -0.712 0.476498    
+size12582912:chunk.order"102"  -0.594483   0.644171  -0.923 0.356166    
+size25165824:chunk.order"102"  -0.473177   0.646984  -0.731 0.464628    
+size50331648:chunk.order"102"  -0.521614   0.644171  -0.810 0.418164    
+size100663296:chunk.order"102" -0.521614   0.644171  -0.810 0.418164    
+size201326592:chunk.order"102" -0.521614   0.644171  -0.810 0.418164    
+size24576:chunk.order"120"      0.395176   0.641363   0.616 0.537851    
+size49152:chunk.order"120"      0.229003   0.644167   0.356 0.722242    
+size98304:chunk.order"120"     -1.452520   0.641363  -2.265 0.023613 *  
+size196608:chunk.order"120"    -4.430243   0.649857  -6.817 1.16e-11 ***
+size393216:chunk.order"120"    -0.268768   0.641363  -0.419 0.675210    
+size786432:chunk.order"120"    -0.291474   0.644167  -0.452 0.650960    
+size1572864:chunk.order"120"   -0.327055   0.658904  -0.496 0.619682    
+size3145728:chunk.order"120"   -0.211420   0.652750  -0.324 0.746048    
+size6291456:chunk.order"120"   -0.214828   0.641363  -0.335 0.737687    
+size12582912:chunk.order"120"  -0.296687   0.641363  -0.463 0.643700    
+size25165824:chunk.order"120"  -0.259778   0.641363  -0.405 0.685482    
+size50331648:chunk.order"120"  -0.259778   0.641363  -0.405 0.685482    
+size100663296:chunk.order"120" -0.259778   0.641363  -0.405 0.685482    
+size201326592:chunk.order"120" -0.259778   0.641363  -0.405 0.685482    
+size24576:chunk.order"201"      0.526915   0.653601   0.806 0.420220    
+size49152:chunk.order"201"      0.286944   0.656361   0.437 0.662023    
+size98304:chunk.order"201"     -5.161284   0.662689  -7.788 9.84e-15 ***
+size196608:chunk.order"201"    -4.135361   0.659053  -6.275 4.11e-10 ***
+size393216:chunk.order"201"     0.076005   0.665547   0.114 0.909089    
+size786432:chunk.order"201"     0.043413   0.656363   0.066 0.947270    
+size1572864:chunk.order"201"    0.005380   0.665057   0.008 0.993546    
+size3145728:chunk.order"201"    0.228999   0.661975   0.346 0.729422    
+size6291456:chunk.order"201"    0.209961   0.653601   0.321 0.748058    
+size12582912:chunk.order"201"   0.146081   0.653601   0.224 0.823163    
+size25165824:chunk.order"201"   1.882713   0.653601   2.881 0.004004 ** 
+size50331648:chunk.order"201"   0.075110   0.653601   0.115 0.908521    
+size100663296:chunk.order"201"  0.075110   0.653601   0.115 0.908521    
+size201326592:chunk.order"201"  0.075110   0.653601   0.115 0.908521    
+size24576:chunk.order"210"     -0.517250   0.659718  -0.784 0.433086    
+size49152:chunk.order"210"     -0.151333   0.650009  -0.233 0.815922    
+size98304:chunk.order"210"     -3.036779   0.647254  -4.692 2.85e-06 ***
+size196608:chunk.order"210"    -2.314576   0.650046  -3.561 0.000377 ***
+size393216:chunk.order"210"     1.906888   0.650014   2.934 0.003381 ** 
+size786432:chunk.order"210"     1.695961   0.650047   2.609 0.009135 ** 
+size1572864:chunk.order"210"    1.707342   0.665888   2.564 0.010405 *  
+size3145728:chunk.order"210"    1.550426   0.652947   2.375 0.017647 *  
+size6291456:chunk.order"210"    1.382513   0.647254   2.136 0.032778 *  
+size12582912:chunk.order"210"   1.139647   0.647254   1.761 0.078404 .  
+size25165824:chunk.order"210"   0.105395   0.647254   0.163 0.870662    
+size50331648:chunk.order"210"  -0.298307   0.647254  -0.461 0.644923    
+size100663296:chunk.order"210" -0.298307   0.647254  -0.461 0.644923    
+size201326592:chunk.order"210" -0.298307   0.647254  -0.461 0.644923    
+size24576:fsync"001"           -0.106126   0.762581  -0.139 0.889330    
+size49152:fsync"001"           -0.290609   0.758327  -0.383 0.701587    
+size98304:fsync"001"           -1.238828   0.758327  -1.634 0.102461    
+size196608:fsync"001"          -1.253809   0.762362  -1.645 0.100170    
+size393216:fsync"001"          -0.876796   0.767338  -1.143 0.253294    
+size786432:fsync"001"          -1.250370   0.758327  -1.649 0.099303 .  
+size1572864:fsync"001"         -1.034382   0.767567  -1.348 0.177904    
+size3145728:fsync"001"         -1.181191   0.776689  -1.521 0.128435    
+size6291456:fsync"001"         -1.222338   0.758327  -1.612 0.107112    
+size12582912:fsync"001"        -1.047993   0.758327  -1.382 0.167101    
+size25165824:fsync"001"        -1.121604   0.762614  -1.471 0.141487    
+size50331648:fsync"001"        -1.165739   0.758327  -1.537 0.124358    
+size100663296:fsync"001"       -1.165739   0.758327  -1.537 0.124358    
+size201326592:fsync"001"       -1.165739   0.758327  -1.537 0.124358    
+size24576:fsync"010"            0.270150   0.754216   0.358 0.720234    
+size49152:fsync"010"           -0.216091   0.749935  -0.288 0.773258    
+size98304:fsync"010"           -1.256438   0.759027  -1.655 0.097983 .  
+size196608:fsync"010"          -1.982238   0.754032  -2.629 0.008619 ** 
+size393216:fsync"010"          -1.799258   0.754139  -2.386 0.017113 *  
+size786432:fsync"010"          -1.930141   0.749935  -2.574 0.010117 *  
+size1572864:fsync"010"         -1.922535   0.758703  -2.534 0.011338 *  
+size3145728:fsync"010"         -1.393668   0.754295  -1.848 0.064771 .  
+size6291456:fsync"010"         -1.370975   0.749935  -1.828 0.067649 .  
+size12582912:fsync"010"        -1.271047   0.749935  -1.695 0.090222 .  
+size25165824:fsync"010"        -1.913441   0.754293  -2.537 0.011249 *  
+size50331648:fsync"010"        -1.959032   0.749935  -2.612 0.009048 ** 
+size100663296:fsync"010"       -1.959032   0.749935  -2.612 0.009048 ** 
+size201326592:fsync"010"       -1.959032   0.749935  -2.612 0.009048 ** 
+size24576:fsync"011"            0.483225   0.762468   0.634 0.526293    
+size49152:fsync"011"            0.232768   0.754223   0.309 0.757636    
+size98304:fsync"011"            2.968406   0.758524   3.913 9.34e-05 ***
+size196608:fsync"011"          -0.385828   0.767172  -0.503 0.615063    
+size393216:fsync"011"          -0.126363   0.754223  -0.168 0.866958    
+size786432:fsync"011"          -0.329243   0.754223  -0.437 0.662488    
+size1572864:fsync"011"         -0.474991   0.754223  -0.630 0.528899    
+size3145728:fsync"011"          0.252317   0.762906   0.331 0.740875    
+size6291456:fsync"011"          0.210117   0.754223   0.279 0.780585    
+size12582912:fsync"011"         0.236835   0.754223   0.314 0.753538    
+size25165824:fsync"011"        -0.446487   0.758568  -0.589 0.556188    
+size50331648:fsync"011"        -0.329251   0.754223  -0.437 0.662480    
+size100663296:fsync"011"       -0.329251   0.754223  -0.437 0.662480    
+size201326592:fsync"011"       -0.329251   0.754223  -0.437 0.662480    
+size24576:fsync"100"           -0.730432   0.754216  -0.968 0.332905    
+size49152:fsync"100"           -0.686357   0.749935  -0.915 0.360162    
+size98304:fsync"100"           -1.001914   0.749935  -1.336 0.181670    
+size196608:fsync"100"          -1.918317   0.758376  -2.530 0.011483 *  
+size393216:fsync"100"          -3.442995   0.754138  -4.565 5.22e-06 ***
+size786432:fsync"100"          -3.509139   0.749935  -4.679 3.03e-06 ***
+size1572864:fsync"100"         -3.454734   0.758748  -4.553 5.53e-06 ***
+size3145728:fsync"100"         -3.380934   0.754295  -4.482 7.72e-06 ***
+size6291456:fsync"100"         -3.313458   0.749935  -4.418 1.04e-05 ***
+size12582912:fsync"100"        -3.032409   0.754217  -4.021 5.98e-05 ***
+size25165824:fsync"100"        -3.843127   0.754293  -5.095 3.75e-07 ***
+size50331648:fsync"100"        -2.647637   0.749935  -3.530 0.000422 ***
+size100663296:fsync"100"       -2.647637   0.749935  -3.530 0.000422 ***
+size201326592:fsync"100"       -2.647637   0.749935  -3.530 0.000422 ***
+size24576:fsync"101"            0.716925   0.766686   0.935 0.349828    
+size49152:fsync"101"            0.978994   0.753825   1.299 0.194165    
+size98304:fsync"101"            4.177516   0.753825   5.542 3.31e-08 ***
+size196608:fsync"101"           2.389860   0.757927   3.153 0.001634 ** 
+size393216:fsync"101"          -0.516589   0.753825  -0.685 0.493224    
+size786432:fsync"101"          -0.600600   0.753825  -0.797 0.425679    
+size1572864:fsync"101"         -0.605937   0.758101  -0.799 0.424202    
+size3145728:fsync"101"         -0.472395   0.758143  -0.623 0.533279    
+size6291456:fsync"101"         -0.332999   0.753825  -0.442 0.658711    
+size12582912:fsync"101"        -0.208631   0.753825  -0.277 0.781984    
+size25165824:fsync"101"        -0.934588   0.758142  -1.233 0.217790    
+size50331648:fsync"101"         0.260902   0.753825   0.346 0.729293    
+size100663296:fsync"101"        0.260902   0.753825   0.346 0.729293    
+size201326592:fsync"101"        0.260902   0.753825   0.346 0.729293    
+size24576:fsync"110"           -0.068231   0.758505  -0.090 0.928331    
+size49152:fsync"110"           -0.690979   0.758494  -0.911 0.362389    
+size98304:fsync"110"            2.177458   0.762919   2.854 0.004351 ** 
+size196608:fsync"110"           0.854163   0.762645   1.120 0.262820    
+size393216:fsync"110"          -2.848713   0.754223  -3.777 0.000162 ***
+size786432:fsync"110"          -2.932724   0.754223  -3.888 0.000104 ***
+size1572864:fsync"110"         -2.925234   0.758531  -3.856 0.000118 ***
+size3145728:fsync"110"         -2.849777   0.758570  -3.757 0.000176 ***
+size6291456:fsync"110"         -2.758328   0.754223  -3.657 0.000260 ***
+size12582912:fsync"110"        -2.460126   0.758523  -3.243 0.001197 ** 
+size25165824:fsync"110"        -3.335944   0.758568  -4.398 1.14e-05 ***
+size50331648:fsync"110"        -2.140453   0.754223  -2.838 0.004577 ** 
+size100663296:fsync"110"       -2.140453   0.754223  -2.838 0.004577 ** 
+size201326592:fsync"110"       -2.140453   0.754223  -2.838 0.004577 ** 
+size24576:fsync"111"           -0.035051   0.758366  -0.046 0.963139    
+size49152:fsync"111"           -0.055487   0.749935  -0.074 0.941025    
+size98304:fsync"111"            7.265432   0.749935   9.688  < 2e-16 ***
+size196608:fsync"111"           3.189353   0.754032   4.230 2.42e-05 ***
+size393216:fsync"111"          -0.648935   0.754133  -0.861 0.389593    
+size786432:fsync"111"          -0.665189   0.754217  -0.882 0.377883    
+size1572864:fsync"111"         -0.675115   0.775122  -0.871 0.383849    
+size3145728:fsync"111"         -0.568194   0.763027  -0.745 0.456548    
+size6291456:fsync"111"         -0.473121   0.749935  -0.631 0.528174    
+size12582912:fsync"111"        -0.348754   0.749935  -0.465 0.641939    
+size25165824:fsync"111"        -1.098684   0.754293  -1.457 0.145358    
+size50331648:fsync"111"         0.096806   0.749935   0.129 0.897300    
+size100663296:fsync"111"        0.096806   0.749935   0.129 0.897300    
+size201326592:fsync"111"        0.096806   0.749935   0.129 0.897300    
+size24576:sync"011"             0.387476   0.538935   0.719 0.472228    
+size49152:sync"011"             0.008387   0.532960   0.016 0.987446    
+size98304:sync"011"            -1.708001   0.534343  -3.196 0.001409 ** 
+size196608:sync"011"           -2.166736   0.534483  -4.054 5.19e-05 ***
+size393216:sync"011"           -2.021532   0.534612  -3.781 0.000160 ***
+size786432:sync"011"           -2.076546   0.531453  -3.907 9.58e-05 ***
+size1572864:sync"011"          -2.045835   0.545635  -3.749 0.000181 ***
+size3145728:sync"011"          -2.057149   0.537527  -3.827 0.000133 ***
+size6291456:sync"011"          -2.106513   0.531453  -3.964 7.59e-05 ***
+size12582912:sync"011"         -2.092581   0.531453  -3.937 8.46e-05 ***
+size25165824:sync"011"         -2.076546   0.531453  -3.907 9.58e-05 ***
+size50331648:sync"011"         -2.076546   0.531453  -3.907 9.58e-05 ***
+size100663296:sync"011"        -2.076546   0.531453  -3.907 9.58e-05 ***
+size201326592:sync"011"        -2.076546   0.531453  -3.907 9.58e-05 ***
+size24576:sync"101"            -0.204989   0.531359  -0.386 0.699691    
+size49152:sync"101"            -0.292627   0.529655  -0.552 0.580664    
+size98304:sync"101"            -2.079237   0.531073  -3.915 9.27e-05 ***
+size196608:sync"101"           -1.952332   0.532699  -3.665 0.000252 ***
+size393216:sync"101"           -1.905805   0.531279  -3.587 0.000341 ***
+size786432:sync"101"           -1.948509   0.529653  -3.679 0.000239 ***
+size1572864:sync"101"          -2.074713   0.539415  -3.846 0.000123 ***
+size3145728:sync"101"          -1.750546   0.531147  -3.296 0.000995 ***
+size6291456:sync"101"          -1.818528   0.528126  -3.443 0.000584 ***
+size12582912:sync"101"         -1.836591   0.529654  -3.468 0.000534 ***
+size25165824:sync"101"         -1.296533   0.528126  -2.455 0.014157 *  
+size50331648:sync"101"         -2.457407   0.528126  -4.653 3.44e-06 ***
+size100663296:sync"101"        -2.457407   0.528126  -4.653 3.44e-06 ***
+size201326592:sync"101"        -2.457407   0.528126  -4.653 3.44e-06 ***
+size24576:sync"111"            -0.538822   0.531456  -1.014 0.310747    
+size49152:sync"111"            -0.857503   0.529775  -1.619 0.105655    
+size98304:sync"111"            -1.153887   0.532752  -2.166 0.030413 *  
+size196608:sync"111"           -1.730541   0.531341  -3.257 0.001141 ** 
+size393216:sync"111"           -1.797599   0.529746  -3.393 0.000701 ***
+size786432:sync"111"           -1.842713   0.528246  -3.488 0.000494 ***
+size1572864:sync"111"          -1.868674   0.539399  -3.464 0.000540 ***
+size3145728:sync"111"          -1.555781   0.535846  -2.903 0.003723 ** 
+size6291456:sync"111"          -1.760516   0.528246  -3.333 0.000872 ***
+size12582912:sync"111"         -1.860530   0.529774  -3.512 0.000453 ***
+size25165824:sync"111"         -1.934162   0.529739  -3.651 0.000266 ***
+size50331648:sync"111"         -3.150514   0.528246  -5.964 2.81e-09 ***
+size100663296:sync"111"        -3.150514   0.528246  -5.964 2.81e-09 ***
+size201326592:sync"111"        -3.150514   0.528246  -5.964 2.81e-09 ***
+chunk.order"021":fsync"001"    -0.382923   0.469481  -0.816 0.414789    
+chunk.order"102":fsync"001"    -0.360603   0.472796  -0.763 0.445712    
+chunk.order"120":fsync"001"    -0.578235   0.471710  -1.226 0.220379    
+chunk.order"201":fsync"001"    -0.540900   0.475113  -1.138 0.255034    
+chunk.order"210":fsync"001"    -0.374330   0.474133  -0.790 0.429891    
+chunk.order"021":fsync"010"    -0.946490   0.468385  -2.021 0.043411 *  
+chunk.order"102":fsync"010"    -0.495383   0.470632  -1.053 0.292630    
+chunk.order"120":fsync"010"    -0.863327   0.469483  -1.839 0.066050 .  
+chunk.order"201":fsync"010"    -0.845943   0.475484  -1.779 0.075341 .  
+chunk.order"210":fsync"010"     0.385034   0.470572   0.818 0.413306    
+chunk.order"021":fsync"011"    -1.620541   0.468385  -3.460 0.000549 ***
+chunk.order"102":fsync"011"    -0.593675   0.472830  -1.256 0.209385    
+chunk.order"120":fsync"011"    -1.368277   0.469480  -2.914 0.003595 ** 
+chunk.order"201":fsync"011"    -1.350134   0.472986  -2.854 0.004346 ** 
+chunk.order"210":fsync"011"    -0.175521   0.471632  -0.372 0.709807    
+chunk.order"021":fsync"100"    -1.216563   0.471681  -2.579 0.009959 ** 
+chunk.order"102":fsync"100"    -0.562465   0.471725  -1.192 0.233233    
+chunk.order"120":fsync"100"    -0.689673   0.470563  -1.466 0.142873    
+chunk.order"201":fsync"100"    -1.189454   0.474061  -2.509 0.012167 *  
+chunk.order"210":fsync"100"    -2.447355   0.470576  -5.201 2.14e-07 ***
+chunk.order"021":fsync"101"    -1.402305   0.468385  -2.994 0.002781 ** 
+chunk.order"102":fsync"101"    -1.013506   0.471736  -2.148 0.031772 *  
+chunk.order"120":fsync"101"    -1.373038   0.468385  -2.931 0.003404 ** 
+chunk.order"201":fsync"101"    -1.834582   0.472874  -3.880 0.000107 ***
+chunk.order"210":fsync"101"    -3.087835   0.471692  -6.546 7.12e-11 ***
+chunk.order"021":fsync"110"    -1.288671   0.471701  -2.732 0.006340 ** 
+chunk.order"102":fsync"110"    -1.200037   0.473958  -2.532 0.011403 *  
+chunk.order"120":fsync"110"    -0.683874   0.471681  -1.450 0.147220    
+chunk.order"201":fsync"110"    -2.003759   0.475183  -4.217 2.57e-05 ***
+chunk.order"210":fsync"110"    -2.917120   0.472792  -6.170 7.93e-10 ***
+chunk.order"021":fsync"111"    -2.037686   0.475165  -4.288 1.87e-05 ***
+chunk.order"102":fsync"111"    -1.315330   0.476488  -2.760 0.005814 ** 
+chunk.order"120":fsync"111"    -1.502311   0.473987  -3.170 0.001545 ** 
+chunk.order"201":fsync"111"    -2.680734   0.478649  -5.601 2.37e-08 ***
+chunk.order"210":fsync"111"    -3.630082   0.474200  -7.655 2.73e-14 ***
+chunk.order"021":sync"011"      0.475313   0.333185   1.427 0.153826    
+chunk.order"102":sync"011"      0.303654   0.334313   0.908 0.363810    
+chunk.order"120":sync"011"      0.210281   0.333941   0.630 0.528951    
+chunk.order"201":sync"011"      0.297618   0.334689   0.889 0.373960    
+chunk.order"210":sync"011"      0.209648   0.336253   0.623 0.533022    
+chunk.order"021":sync"101"      0.480221   0.333905   1.438 0.150502    
+chunk.order"102":sync"101"     -0.003984   0.334281  -0.012 0.990491    
+chunk.order"120":sync"101"     -0.013277   0.335348  -0.040 0.968423    
+chunk.order"201":sync"101"      0.236919   0.336302   0.704 0.481198    
+chunk.order"210":sync"101"      1.531289   0.334720   4.575 5.00e-06 ***
+chunk.order"021":sync"111"      2.443781   0.333846   7.320 3.32e-13 ***
+chunk.order"102":sync"111"      0.329409   0.335039   0.983 0.325605    
+chunk.order"120":sync"111"      0.260526   0.334668   0.778 0.436371    
+chunk.order"201":sync"111"      0.491511   0.335782   1.464 0.143378    
+chunk.order"210":sync"111"      2.907368   0.334287   8.697  < 2e-16 ***
+fsync"001":sync"011"            0.392611   0.388330   1.011 0.312102    
+fsync"010":sync"011"           -0.488034   0.385305  -1.267 0.205409    
+fsync"011":sync"011"           -0.082026   0.386534  -0.212 0.831961    
+fsync"100":sync"011"           -0.289011   0.384144  -0.752 0.451910    
+fsync"101":sync"011"            0.345236   0.385823   0.895 0.370978    
+fsync"110":sync"011"           -0.550133   0.387099  -1.421 0.155392    
+fsync"111":sync"011"           -0.077536   0.387792  -0.200 0.841542    
+fsync"001":sync"101"            0.219806   0.385425   0.570 0.568528    
+fsync"010":sync"101"            0.671470   0.384864   1.745 0.081160 .  
+fsync"011":sync"101"            1.224117   0.384836   3.181 0.001486 ** 
+fsync"100":sync"101"           -0.734000   0.385440  -1.904 0.056983 .  
+fsync"101":sync"101"           -0.236286   0.384238  -0.615 0.538646    
+fsync"110":sync"101"           -0.758563   0.385429  -1.968 0.049166 *  
+fsync"111":sync"101"           -0.218122   0.384912  -0.567 0.570982    
+fsync"001":sync"111"            0.220735   0.387196   0.570 0.568671    
+fsync"010":sync"111"           -1.250202   0.386061  -3.238 0.001218 ** 
+fsync"011":sync"111"           -0.496924   0.386638  -1.285 0.198826    
+fsync"100":sync"111"           -2.415995   0.385463  -6.268 4.30e-10 ***
+fsync"101":sync"111"           -1.928270   0.386687  -4.987 6.56e-07 ***
+fsync"110":sync"111"           -2.763984   0.387260  -7.137 1.24e-12 ***
+fsync"111":sync"111"           -2.042780   0.387830  -5.267 1.50e-07 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.814 on 2517 degrees of freedom
+Multiple R-squared:  0.6883,	Adjusted R-squared:   0.65 
+F-statistic: 17.93 on 310 and 2517 DF,  p-value: < 2.2e-16
+\end{Soutput}
+\end{Schunk}
+
+Our goal is to find which main effects and interactions affect dspan significantly. There are many methodologies to solve this problem. For my initial analysis, I will use normal plot to see which effects are significant. 
+\begin{center}
+\includegraphics[height=10cm,width=10cm]{qqplot.png}
+\end{center}
+In qqplot, those effects above the qqline (red line in our plot) are considered significant. Those effects also conrespond to very large estimates as seen in our model summary. Another method of finding significant effects is Lenth's method. This method gives us a cut-off for which any effects larger than this cut-off are considered significant. Lenth's method results are also consistent with those in our qqplot.
+
+\section{Orthogonal Array Design}
+\section{Robust Design}
+\section{sensitivity Analysis}
+\end{document}
+
+
+
+
+
+
+
+
+
