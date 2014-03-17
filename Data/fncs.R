@@ -1,5 +1,5 @@
 ################ Input data #################
-Filename <- '3chunks.txt'
+Filename <- '3chunks_v1.txt'
 data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
                          colClasses=c("character","numeric",NA,"factor","factor","factor","character"))
 names(data.sys) <- c("runs","size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
