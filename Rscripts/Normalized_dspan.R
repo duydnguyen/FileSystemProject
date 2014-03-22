@@ -6,6 +6,15 @@ FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
 setwd(FilePath)
 
 source("fncs.R")
+################ Input data #################
+Filename <- '3chunks_v1.txt'
+data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
+                       colClasses=c("numeric",NA,"factor","factor","factor","character"))
+names(data.sys) <- c("size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
+## normalize dspan
+data.sys$dspan <- data.sys$dspan/data.sys$size
+data.sys$size <- as.factor(data.sys$size/1024)
+data.sys <- as.data.frame(data.sys)
 ########### Model fitting with 12KB ######
 #### size = 12K with 2-interactions
 data.12 <- subset(data.sys, size == "12")

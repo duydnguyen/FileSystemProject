@@ -1,13 +1,3 @@
-################ Input data #################
-Filename <- '3chunks_v1.txt'
-data.sys <- read.table(file=Filename, header=TRUE,sep=' ',
-                         colClasses=c("numeric",NA,"factor","factor","factor","character"))
-names(data.sys) <- c("size", "dspan", "chunk.order", "fsync", "sync", "chunk.number" )
-## normalize dspan
-data.sys$dspan <- data.sys$dspan/data.sys$size
-data.sys$size <- as.factor(data.sys$size/1024)
-data.sys <- as.data.frame(data.sys)
-
 ############## Function to decompose factors ###################
 EvalFac <- function(f, name){
     str <- as.matrix(f)
