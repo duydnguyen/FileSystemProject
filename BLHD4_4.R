@@ -3,10 +3,16 @@ rm(list=objects(all.names=TRUE))
 ########## Input data ###############
 FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
 setwd(FilePath)
-Filename <- 'blhd4_4.txt'
+Filename <- 'blhd4_4_ext4.txt'
+columnnames = c("fullness", "num.chunks", "num.cores", 
+                "chunk.order", "file.size", "sync", "dir.id", 
+                "fsync", "disk.size", "disk.used", "dspan")
+columnclasses = c("factor","factor","factor","factor","numeric","factor","factor",
+                  "factor","numeric","factor","numeric")
+names(columnclasses) = columnnames
 data.sys <- read.table(file=Filename, header=T, quote="",
-                       colClasses=c("factor","factor","factor","factor","numeric","factor","factor",
-                                  "factor","numeric","factor","numeric"))
+                       colClasses=columnclasses)
+
 ## normalized dspan
 data.sys$dspan <- data.sys$dspan/data.sys$file.size
 data.sys$file.size <- as.factor(data.sys$file.size/1024)
@@ -16,6 +22,11 @@ data.sys <- as.data.frame(data.sys)
 ## fit model with only main effects
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used
             + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order ,data = data.sys)
+
+model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores 
+             +  num.chunks/chunk.order ,data = data.sys)
+
+
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
 data.frame(SumSq,S.i)
