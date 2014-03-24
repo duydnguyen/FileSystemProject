@@ -3,7 +3,7 @@ rm(list=objects(all.names=TRUE))
 ########## Input data ###############
 FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
 setwd(FilePath)
-Filename <- 'blhd4_4_ext4.txt'
+Filename <- 'blhd4_4_btrfs.txt'
 columnnames = c("fullness", "num.chunks", "num.cores", 
                 "chunk.order", "file.size", "sync", "dir.id", 
                 "fsync", "disk.size", "disk.used", "dspan")
@@ -22,7 +22,7 @@ data.sys <- as.data.frame(data.sys)
 ## fit model with only main effects
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used
             + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order ,data = data.sys)
-
+## throw away some insensitive factors
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores 
              +  num.chunks/chunk.order ,data = data.sys)
 
