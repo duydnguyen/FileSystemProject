@@ -15,7 +15,15 @@ data.sys <- as.data.frame(data.sys)
 
 ######### Analysis ######################
 ## fit model with only main effects
+model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used
+            + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order ,data = data.sys)
+SumSq <- data.frame(anova(model)[2])
+S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
+data.frame(SumSq,S.i)
+## fit model with 2-way interactions
 model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
-            + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order)^2 ,data = data.sys)
-anova(model)
+            + disk.size)^2 + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order ,data = data.sys)
+SumSq <- data.frame(anova(model)[2])
+S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
+data.frame(SumSq,S.i)
 
