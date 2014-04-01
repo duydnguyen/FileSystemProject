@@ -24,13 +24,13 @@ data.xfs <- subset(data.sys, file.system == "xfs")
 
 ######### Analysis ######################
 ## fit model with only main effects
-data = data.btrfs
+data = data.ext4
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used
             + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order ,data = data)
 ## throw away some insensitive factors
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
-data.frame(SumSq,S.i*100)
+df <- data.frame(SumSq,S.i*100)
 
 ## fit model with 2-way interactions
 model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
@@ -57,23 +57,16 @@ model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores
             ,data = data)
 
 
-
-
-
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
-data.frame(SumSq,S.i*100)
+df <- data.frame(SumSq,S.i*100)
 
+## Write to a file
+# out <- capture.output(summary(model.int3.lm))
+# cat(out,file="out_BLHD4_7.txt",sep="\n",append=TRUE)
 
-
-
-
-
-
-
-
-
-
+out <- capture.output(df)
+cat(out,file="out_BLHD4_7.txt",sep="\n",append=TRUE)
 
 
 ## Optimal settings, model selection
