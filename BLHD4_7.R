@@ -3,7 +3,7 @@ rm(list=objects(all.names=TRUE))
 ########## Input data ###############
 FilePath <- '../Google Drive/projects/filesystem_Spring2014/Data'
 setwd(FilePath)
-Filename <- 'all.file.systems-0324.txt'
+Filename <- 'blhd-4by7-results-all-file-systems.txt'
 columnnames = c("fullness", "num.chunks", "num.cores", 
                 "chunk.order", "file.size", "sync", "dir.id", 
                 "fsync", "disk.size", "disk.used", "dspan")
@@ -24,24 +24,37 @@ data.xfs <- subset(data.sys, file.system == "xfs")
 
 ######### Analysis ######################
 ## fit model with only main effects
-data = data.btrfs
+data = data.ext4
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used
-            + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order 
-          ,data = data)
-
+            + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order ,data = data)
 ## throw away some insensitive factors
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
 data.frame(SumSq,S.i*100)
-## Optimal settings, model selection
-null <- lm(log2(dspan) ~ 1 ,data = data)
-smodel <- step(null, scope= list(lower=null, upper=model), direction="forward", 
-                   #k=log(dim(data)[1]))
-                   k=2)
-summary(smodel)
+
 ## fit model with 2-way interactions
 model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
                            + disk.size)^2 + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order ,data = data.sys)
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:21]/sum(SumSq)
 data.frame(SumSq,S.i)
+
+model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
+                           + disk.size + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order
+                          
+                           ,data = data.sys)
+
+
+
+
+
+
+
+
+
+## Optimal settings, model selection
+null <- lm(log2(dspan) ~ 1 ,data = data)
+smodel <- step(null, scope= list(lower=null, upper=model), direction="forward", 
+               #k=log(dim(data)[1]))
+               k=2)
+summary(smodel)
