@@ -24,7 +24,7 @@ data.xfs <- subset(data.sys, file.system == "xfs")
 
 ######### Analysis ######################
 ## fit model with only main effects
-data = data.ext4
+data = data.btrfs
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used
             + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order ,data = data)
 ## throw away some insensitive factors
@@ -34,15 +34,39 @@ data.frame(SumSq,S.i*100)
 
 ## fit model with 2-way interactions
 model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
-                           + disk.size)^2 + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order ,data = data.sys)
-SumSq <- data.frame(anova(model)[2])
-S.i <- SumSq[[1]][1:21]/sum(SumSq)
-data.frame(SumSq,S.i)
+                           + disk.size)^2 + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order 
+            ,data = data.sys)
+# 2-way interactions related to num.chunks and file.size
+model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used + disk.size 
+             + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order 
+            
+             + num.chunks:file.size + num.chunks:fullness + num.chunks:dir.id + 
+              num.chunks:num.cores + num.chunks:disk.used + num.chunks:disk.size
+            
+             + file.size:fullness + file.size:dir.id + file.size:num.cores + 
+              file.size:disk.used + file.size:disk.size    
+            
+             + fullness:dir.id + fullness:num.cores + fullness:disk.used + fullness:disk.size
+               
+             
+             + dir.id:num.cores + dir.id:disk.used + dir.id:disk.size
+            
+             + num.cores:disk.used + num.cores:disk.size
+             
+            + disk.used:disk.size
+            ,data = data)
 
-model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
-                           + disk.size + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order
-                          
-                           ,data = data.sys)
+
+
+
+
+SumSq <- data.frame(anova(model)[2])
+S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
+data.frame(SumSq,S.i*100)
+
+
+
+
 
 
 
