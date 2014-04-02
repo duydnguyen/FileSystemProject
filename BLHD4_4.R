@@ -29,6 +29,8 @@ model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores
             + disk.size + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order 
           ,data = data)
 
+
+
 ## throw away some insensitive factors
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)

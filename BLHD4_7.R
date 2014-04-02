@@ -36,7 +36,7 @@ df <- data.frame(SumSq,S.i*100)
 model <- lm(log2(dspan) ~ (num.chunks + file.size + fullness + dir.id + num.cores + disk.used
                            + disk.size)^2 + num.chunks/fsync + num.chunks/sync  + num.chunks/chunk.order 
             ,data = data.sys)
-# 2-way interactions related to num.chunks and file.size
+# 2-way interactions
 model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used + disk.size 
              + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order 
             
@@ -53,18 +53,47 @@ model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores
             
              + num.cores:disk.used + num.cores:disk.size
              
-            + disk.used:disk.size
+             + disk.used:disk.size
+            
             ,data = data)
 
-
+# 2-way and 3-way interactions
+model <- lm(log2(dspan) ~ num.chunks + file.size + fullness + dir.id + num.cores + disk.used + disk.size 
+            + num.chunks/fsync + num.chunks/sync + num.chunks/chunk.order 
+            
+            + num.chunks:file.size + num.chunks:fullness + num.chunks:dir.id + 
+              num.chunks:num.cores + num.chunks:disk.used + num.chunks:disk.size
+            
+            + file.size:fullness + file.size:dir.id + file.size:num.cores + 
+              file.size:disk.used + file.size:disk.size    
+            
+            + fullness:dir.id + fullness:num.cores + fullness:disk.used + fullness:disk.size
+            
+            
+            + dir.id:num.cores + dir.id:disk.used + dir.id:disk.size
+            
+            + num.cores:disk.used + num.cores:disk.size
+            
+            + disk.used:disk.size
+            
+            + num.chunks:file.size:fullness + num.chunks:file.size:dir.id + num.chunks:file.size:num.cores 
+            + num.chunks:file.size:disk.used + num.chunks:file.size:disk.size 
+            
+            + file.size:fullness:dir.id + file.size:fullness:num.cores + file.size:fullness:disk.used 
+            + file.size:fullness:disk.size
+            
+            + fullness:dir.id:num.cores + fullness:dir.id:disk.used + fullness:dir.id:disk.size
+            
+            + dir.id:num.cores:disk.used + dir.id:num.cores:disk.size
+            
+            + num.cores:disk.used:disk.size
+            ,data = data)
+## Print output
 SumSq <- data.frame(anova(model)[2])
 S.i <- SumSq[[1]][1:length(SumSq[[1]])]/sum(SumSq)
 df <- data.frame(SumSq,S.i*100)
 
 ## Write to a file
-# out <- capture.output(summary(model.int3.lm))
-# cat(out,file="out_BLHD4_7.txt",sep="\n",append=TRUE)
-
 out <- capture.output(df)
 cat(out,file="out_BLHD4_7.txt",sep="\n",append=TRUE)
 
